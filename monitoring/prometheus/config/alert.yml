@@ -1,0 +1,81 @@
+groups:
+- name: validator_statuses
+  rules:
+  - alert: InstanceDeposit # インスタンスデポジットのアラート
+    expr: validator_statuses ==1 and validator_statuses offset 1m != 1 # validator_statuses==1→deposited
+    for: 1m # 1分間条件を満たしていた場合にアラートを出す
+    labels:
+      severity: info
+    annotations:
+      summary: "Validator is deposited!"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} is deposited!"
+
+  - alert: InstancePending # インスタンスペンディングのアラート
+    expr: validator_statuses ==2 and validator_statuses offset 1m != 2 # validator_statuses==2→pending
+    for: 1m # 1分間条件を満たしていた場合にアラートを出す
+    labels:
+      severity: info
+    annotations:
+      summary: "Validator is pending!"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} is pending!"
+
+  - alert: InstanceActive # インスタンスアクティブのアラート
+    expr: validator_statuses ==3 and validator_statuses offset 1m != 3 # validator_statuses==3→activated
+    for: 1m # 1分間条件を満たしていた場合にアラートを出す
+    labels:
+      severity: page
+    annotations:
+      summary: "Validator is activated!"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} is activated!"
+
+  - alert: InstanceExiting # インスタンスExitingのアラート
+    expr: validator_statuses == 4 and validator_statuses offset 1m != 4 # validator_statuses==4→exiting
+    for: 1m # 1分間条件を満たしていた場合にアラートを出す
+    labels:
+      severity: warning
+    annotations:
+      summary: "Validator status is exiting!"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} is exting!"
+
+  - alert: InstanceSlashing # インスタンススラッシングのアラート
+    expr: validator_statuses == 5 and validator_statuses offset 1m != 5 # validator_statuses==5→slashing
+    for: 1m # 1分間条件を満たしていた場合にアラートを出す
+    labels:
+      severity: critical
+    annotations:
+      summary: "Instance {{ $labels.instance }} validator status is slashing..."
+      description: "{{ $labels.instance }} of job {{ $labels.job }} is slashing..."
+
+  - alert: InstanceExited # インスタンスExsitedのアラート
+    expr: validator_statuses == 6 and validator_statuses offset 1m != 6 # validator_statuses==6→exited
+    for: 1m # 1分間条件を満たしていた場合にアラートを出す
+    labels:
+      severity: info
+    annotations:
+      summary: "Validator status is exited!"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} is exited!"
+
+- name: validator_successful_attestation
+  rules:
+  - alert: validator_successful_attestation
+    #4回前から3回前は増加しているが3回前と2回前、2回前と1回前、1回前と現在の投票成功回数が変化していない、つまり3回投票ミスの初回に発報
+    expr: validator_successful_attestations offset 1536s +1 == validator_successful_attestations offset 1152s and validator_successful_attestations offset 1152s == validator_successful_attestations offset 768s and validator_successful_attestations offset 768s == validator_successful_attestations offset 384s and validator_successful_attestations offset 384s == validator_successful_attestations
+    for: 1m # 1分間条件を満たしていた場合にアラートを出す
+    labels:
+      severity: warning
+    annotations:
+      summary: "アテステーションを3回連続ミスしています"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} の投票が3回連続ミスになりました"
+    
+- name: peer_count
+  rules:
+  - alert: validator_count_error
+    #ピアの数が閾値以下で発報
+    expr: p2p_peer_count{state="Connected"} <= 10
+    for: 1m # 1分間条件を満たしていた場合にアラートを出す
+    labels:
+      severity: critical
+    annotations:
+      summary: "ピアに接続されているノード数が10以下です"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} の接続ピア数が{{$value}}になりました"
+    

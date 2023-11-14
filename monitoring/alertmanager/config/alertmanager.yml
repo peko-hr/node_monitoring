@@ -1,0 +1,12 @@
+global:
+  slack_api_url: 'https://hooks.slack.com/services/*****a'
+
+route:
+  receiver: 'slack-notifications' 
+  group_by: [alertname, datacenter, app]
+
+receivers:
+- name: 'slack-notifications' # (2)
+  slack_configs:
+  - title: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}" # (3)
+    text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"

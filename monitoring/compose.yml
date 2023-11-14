@@ -1,0 +1,46 @@
+version: '3.1'
+services:
+  grafana:
+    image: grafana/grafana:10.0.2
+    container_name: grafana
+    ports:
+      #- "80:3000"
+      - "80:80"
+    env_file:
+      - '.env.grafana'
+    volumes:
+      # Data persistency
+      # sudo mkdir -p ~/docker/grafana/data; chown 472:472 /srv/docker/grafana/data
+      - grafana-storage:/var/lib/grafana
+    restart: unless-stopped
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: prometheus
+    # In production, dont open these ports for security.
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    extra_hosts:
+      - "monitoring:*.*.*.*"
+      - "node01:*.*.*.*"
+      - "node02:*.*.*.*"
+      - "stake01:*.*.*.*"
+
+    volumes:
+      - ./prometheus/config:/etc/prometheus:ro
+      # Data persistency
+      # sudo mkdir -p ./prometheus/data/; chmod 777 ./prometheus/data
+      - prometheus-storage:/prometheus
+  alertmanager:
+    image: quay.io/prometheus/alertmanager
+    container_name: alertmanager
+    # In production, dont open these ports for security.
+    ports:
+      - "9093:9093"
+    restart: unless-stopped
+    volumes:
+      - ./alertmanager/config/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      #- ./alertmanager/data:/alertmanager
+volumes:
+  prometheus-storage:
+  grafana-storage:
