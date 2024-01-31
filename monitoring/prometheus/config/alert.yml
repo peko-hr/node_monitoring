@@ -66,7 +66,7 @@ groups:
     annotations:
       summary: "アテステーションを3回連続ミスしています"
       description: "{{ $labels.instance }} of job {{ $labels.job }} の投票が3回連続ミスになりました"
-    
+
 - name: peer_count
   rules:
   - alert: validator_count_error
@@ -78,4 +78,3 @@ groups:
     annotations:
       summary: "ピアに接続されているノード数が10以下です"
       description: "{{ $labels.instance }} of job {{ $labels.job }} の接続ピア数が{{$value}}になりました"
-    
